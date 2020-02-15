@@ -4,8 +4,11 @@
 Kõik arduino skriptid asuvad kaustas Arduino. 
 
 ### Skriptid ja nende lühikirjeldus 
-- MyBlink - skript arduino testimisel. Lülitab LED sisse ja välja 1 sekundilise viivitusega.  
-- Test1 - ...
+- MyBlink - Skript arduino testimisel. Lülitab LED sisse ja välja 1 sekundilise viivitusega.  
+- Test1 - Esimene proovi script. Väljastab serial monitorile testmuutujad ja arv, mis   suurendatakse 1st kuni 50.  
+- Test2 - Esimene script BT ühenduse loomiseks ja testimiseks. nüüd arduino väljastab serial  monitorile BT moodulile saadud sõnumeid.  
+- Test3 - Script BT ühenduse loomiseks. Sõnumeid saadetakse formaadis: "SmsNumber\nSmsText"   
+Sõnumeid, mis saadab teised seaded BT-moodulile arduino kirjutab serial monitorile.  
 
 ## Android Studio  
 - ...
@@ -20,5 +23,5 @@ Näiteks sauna kerise mobiiliga juhtimine. Ühelt telefonilt saadetakse teisele 
 telefon edastab selle kontrollerile, mis siis omakorda juhib sauna kerist või mingit muud seadet
 
 ## ...  
-Autor: Anton Kink 179284IACB
-juhendaja: Priit Ruberg, PhD
+Autor: Anton Kink 179284IACB  
+Juhendaja: Priit Ruberg, PhD
