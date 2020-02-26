@@ -10,8 +10,8 @@ Kõik arduino skriptid asuvad kaustas Arduino.
 - Test3 - Script BT ühenduse loomiseks. Sõnumeid saadetakse formaadis: "SmsNumber\nSmsText"   
 Sõnumeid, mis saadab teised seaded BT-moodulile arduino kirjutab serial monitorile.  
 
-## Android Studio  
-- ...
+## SMSApp  
+- loeb sisse tulevaid smsid, fail asub kaustas "APK" nimega "app-debug_v1.apk"
 
 ## Lühikirjeldus  
 Kirjutada lihtne rakendus telefoni jaoks, mis saadab sissetulevad SMSid bluetoothi kaudu   
