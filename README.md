@@ -5,13 +5,14 @@ Kõik arduino skriptid asuvad kaustas Arduino.
 
 ### Skriptid ja nende lühikirjeldus 
 - MyBlink - Skript arduino testimisel. Lülitab LED sisse ja välja 1 sekundilise viivitusega.  
-- Test1 - Esimene proovi script. Väljastab serial monitorile testmuutujad ja arv, mis   suurendatakse 1st kuni 50.  
-- Test2 - Esimene script BT ühenduse loomiseks ja testimiseks. nüüd arduino väljastab serial  monitorile BT moodulile saadud sõnumeid.  
-- Test3 - Script BT ühenduse loomiseks. Sõnumeid saadetakse formaadis: "SmsNumber\nSmsText"   
+- SerialMonitorTest - Esimene proovi script. Väljastab serial monitorile testmuutujad ja arv, mis   suurendatakse 1st kuni 50.  
+- BtToSMTest - Esimene script BT ühenduse loomiseks ja testimiseks. nüüd arduino väljastab serial  monitorile BT moodulile saadud sõnumeid.  
+- BtToSM - Script BT ühenduse loomiseks. Sõnumeid saadetakse formaadis: "SmsNumber\nSmsText"   
 Sõnumeid, mis saadab teised seaded BT-moodulile arduino kirjutab serial monitorile.  
 
 ## SMSApp  
-- loeb sisse tulevaid smsid, fail asub kaustas "APK" nimega "app-debug_v1.apk"
+- VERSIOON_1 - loeb sisse tulevaid smsid, fail asub kaustas "APK" nimega "app-debug_v1.apk"
+- VERSIOON_2 - lülitab sisse/välja Bt, fail asub kaustas "APK" nimega "app-debug_v2.apk"
 
 ## Lühikirjeldus  
 Kirjutada lihtne rakendus telefoni jaoks, mis saadab sissetulevad SMSid bluetoothi kaudu   
