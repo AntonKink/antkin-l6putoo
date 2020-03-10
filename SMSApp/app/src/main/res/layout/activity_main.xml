@@ -5,35 +5,89 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:padding="16dp"
     tools:context=".MainActivity">
 
-
+    <!-- alt+enter - store string as @string/ -->
     <TextView
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Praegu ma lihtsalt loen sissetulevaid sms"
+        android:text="@string/Pealkiri"
         android:gravity="center"
         android:layout_marginTop="50dp"
-        android:textSize="18dp"
+        android:textSize="24sp"
         />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:hint="message"
+        android:hint="@string/message"
         android:layout_gravity="center"
         android:layout_marginTop="25dp"
-        android:textSize="24dp"
+        android:textSize="24sp"
         android:id="@+id/message"
         />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:hint="number"
+        android:hint="@string/number"
         android:layout_gravity="center"
         android:layout_marginTop="25dp"
-        android:textSize="24dp"
+        android:textSize="24sp"
         android:id="@+id/number"
         />
+    <Switch
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/bluetooth_on_off"
+        android:layout_gravity="center"
+        android:layout_marginTop="25dp"
+        android:textSize="24sp"
+        android:id="@+id/switch_enable_bt"
+        />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/frame_message"
+        android:visibility="visible"> <!-- Visibility 1 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="@string/bt_off"
+            android:layout_gravity="center"
+            android:layout_marginTop="25dp"
+            android:textSize="24sp"
+            android:id="@+id/tv_message"
+            />
+    </FrameLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:id="@+id/frame_control"
+        android:visibility="gone"> <!-- Visibility 2 -->
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/search"
+            android:layout_gravity="center"
+            android:textSize="24sp"
+            android:id="@+id/btn_enable_search"/>
+        <ProgressBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_marginTop="8dp"
+            android:id="@+id/pb_progress"
+            android:visibility="gone"/><!-- Visibility 3 -->
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="8dp"
+            android:id="@+id/lv_bt_device">
+
+        </ListView>
+    </LinearLayout>
 
 </LinearLayout>

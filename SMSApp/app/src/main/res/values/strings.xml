@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">SMSApp</string>
+    <string name="Pealkiri">Loeb SMS + BT ON/OFF</string>
+    <string name="message">message</string>
+    <string name="number">number</string>
+    <string name="bluetooth_on_off">Bluetooth ON/Off</string>
+    <string name="bt_off">BT OFF</string>
+    <string name="search">Search</string>
 </resources>
