@@ -9,11 +9,14 @@ Kõik arduino skriptid asuvad kaustas Arduino.
 - BtToSMTest - Esimene script BT ühenduse loomiseks ja testimiseks. nüüd arduino väljastab serial  monitorile BT moodulile saadud sõnumeid.  
 - BtToSM - Script BT ühenduse loomiseks. Sõnumeid saadetakse formaadis: "SmsNumber\nSmsText"   
 Sõnumeid, mis saadab teised seaded BT-moodulile arduino kirjutab serial monitorile.  
+- DisplayTest - Skript Ekraani testimiseks. Kuvab lähtestamisest möödunud sekundite arvu  
+- BtToDisplay - kirjutab vastuvõetud sõnumid ekraanile ja serial monitorile.  Sõnumeid saadetakse formaadis: "SmsNumber\nSmsText"
 
 ## SMSApp  
-- VERSIOON_1 - loeb sisse tulevaid smsid, fail asub kaustas "APK" nimega "app-debug_v1.apk"
-- VERSIOON_2 - lülitab sisse/välja Bt, fail asub kaustas "APK" nimega "app-debug_v2.apk"
-
+- VERSIOON_1 - loeb sisse tulevaid sms, fail asub kaustas "APK" nimega "app-debug_v1.apk"  
+- VERSIOON_2 - lülitab sisse/välja Bt, fail asub kaustas "APK" nimega "app-debug_v2.apk"  
+- VERSIOON_2 - teeb ühendust ja saadab info Bt kaudu, fail asub kaustas "APK" nimega "app-debug_v3.apk"  
+   
 ## Lühikirjeldus  
 Kirjutada lihtne rakendus telefoni jaoks, mis saadab sissetulevad SMSid bluetoothi kaudu   
 Arduinole ja see omakorda neid kuidagi kuvab (näiteks terminali kaudu nagu PUTTY või   
@@ -23,6 +26,6 @@ Tegu võiks olla mingi praktilise lahendusega, et see on ainult osa suuremast s�
 Näiteks sauna kerise mobiiliga juhtimine. Ühelt telefonilt saadetakse teisele info ning teine  
 telefon edastab selle kontrollerile, mis siis omakorda juhib sauna kerist või mingit muud seadet
 
-## ...  
-Autor: Anton Kink 179284IACB  
+## Autor  
+Anton Kink 179284IACB  
 Juhendaja: Priit Ruberg, PhD
