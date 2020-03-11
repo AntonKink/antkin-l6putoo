@@ -1,6 +1,7 @@
 package com.antkin.smsapp;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -11,11 +12,15 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
+import android.net.Uri;
 import android.nfc.Tag;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -302,21 +307,57 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         return tmpArrayList;
     }
 
+    public boolean isLocationServiceEnabled(){
+        LocationManager locationManager = null;
+        boolean gps_enabled= false,network_enabled = false;
+
+        if(locationManager ==null)
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        try{
+            gps_enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        }catch(Exception ex){
+            //do nothing...
+        }
+
+        try{
+            network_enabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        }catch(Exception ex){
+            //do nothing...
+        }
+
+        return gps_enabled || network_enabled;
+
+    }
+    public void LocationServiceNotify(){
+        if (isLocationServiceEnabled()) {
+            //DO what you need...
+        } else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("For some reason (especially if u have android 10), location service should be ON for Bluetooth device discorery.")
+                    .setPositiveButton("Enable", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                        }
+                    }).setNegativeButton("I will try without it", null).create().show();
+        }
+    }
+
     private void enableSearch(){
         if(bluetoothAdapter.isDiscovering()){
             bluetoothAdapter.cancelDiscovery();
         }
         else {
             accessLocationPermission();
-            bluetoothAdapter.startDiscovery(); //ТУТ ломается и в итоге MinuReceiver никогда не начинает работать
-            Toast.makeText(this, "Start Discovering!", Toast.LENGTH_SHORT).show();
+            LocationServiceNotify();
+            bluetoothAdapter.startDiscovery();
+            //Toast.makeText(this, "Start Discovering!", Toast.LENGTH_SHORT).show();
         }
     }
 
     private final BroadcastReceiver MinuReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Toast.makeText(context, "TUUT", Toast.LENGTH_SHORT).show();
             if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
                 //discovery starts, we can show progress dialog or perform other tasks
                 btnEnableSearch.setText("stop search");
@@ -334,25 +375,6 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                     listAdapter.notifyDataSetChanged();
                 }
             }
-
-            /*switch (action){
-                case BluetoothAdapter.ACTION_DISCOVERY_STARTED:
-                    btnEnableSearch.setText("stop search");
-                    pbProgress.setVisibility(View.VISIBLE);
-                    setListAdapter(BT_SEARCH);
-                    break;
-                case BluetoothAdapter.ACTION_DISCOVERY_FINISHED:
-                    btnEnableSearch.setText("start search");
-                    pbProgress.setVisibility(View.GONE);
-                    break;
-                case BluetoothDevice.ACTION_FOUND:
-                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    if(device != null){
-                        bluetoothDevices.add(device);
-                        listAdapter.notifyDataSetChanged();
-                    }
-                    break;
-            }*/
         }
     };
 

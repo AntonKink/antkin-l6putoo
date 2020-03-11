@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">SMSApp</string>
     <string name="Pealkiri">Loen SMS ja saadan BT kaudu arduinole</string>
-    <string name="message">message</string>
-    <string name="number">number</string>
+    <string name="message">Message</string>
+    <string name="number">Number</string>
     <string name="bluetooth_on_off">Bluetooth ON/Off</string>
-    <string name="bt_off">BT OFF</string>
+    <string name="bt_off">Bluetooth OFF</string>
     <string name="search">Search</string>
 </resources>
