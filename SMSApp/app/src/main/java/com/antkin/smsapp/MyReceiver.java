@@ -3,6 +3,7 @@ package com.antkin.smsapp;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Telephony;
@@ -15,6 +16,8 @@ public class MyReceiver extends BroadcastReceiver {
     private static final String SMS_RECEIVED = "android.provider.Telephony.SMS_RECEIVED";
     private static final String TAG = "SmsBroadcastReceiver";
     String msg, phoneNo = "";
+    public static final String SHARED_PREFS = "sharedPrefs";
+    public static final String FILTERED_NUMBER = "number";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -43,7 +46,7 @@ public class MyReceiver extends BroadcastReceiver {
                     msg = message[i].getMessageBody();
                     phoneNo = message[i].getOriginatingAddress();
                 }
-                Toast.makeText(context, "Message: " +msg +"\nNumber" +phoneNo, Toast.LENGTH_LONG).show();
+
             }
         }
     }

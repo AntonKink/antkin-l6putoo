@@ -7,6 +7,9 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.Activity;
+import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -15,17 +18,21 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.nfc.Tag;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.telephony.SmsManager;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -35,6 +42,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -49,14 +57,31 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
     //code for asking permission
     private static final int MY_PERMISSIONS_REQUEST_RECEIVE_SMS = 0;
+    public static final int REQUEST_CODE_LOC =1;
+    private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 2;
     private static final String SMS_RECEIVED = "android.provider.Telephony.SMS_RECEIVED";
     private static final String TAG = MainActivity.class.getSimpleName();
-    public static final int REQUEST_CODE_LOC =1;
     private static final int REQ_ENABLE_BT = 10;
     public static final int BT_BOUNDED = 21;
     public static final int BT_SEARCH = 22;
 
-    TextView messageTV, numberTV;
+    public static final String SHARED_PREFS = "sharedPrefs";
+    public static final String FILTERED_NUMBER = "number";
+
+    private String textFromArduino;
+    private String phoneNumber;
+    String SENT_SMS = "SENT_SMS";
+    String DELIVER_SMS = "DELIVERED_SMS";
+    Intent sent_intent = new Intent(SENT_SMS);
+    Intent deliver_intent = new Intent(DELIVER_SMS);
+    PendingIntent sent_pi, deliver_pi;
+
+    TextView messageTV, numberTV, fnumberTV, answerTV;
+    private Button btnsavefilter;
+    private EditText filteredNo;
+
+    private EditText etConsole;
+    private ProgressDialog progressDialog;
 
     private FrameLayout frameMessage;
     private LinearLayout frameControls;
@@ -79,14 +104,18 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         @Override
         public void onReceive(Context context, Intent intent) {
             super.onReceive(context, intent);
-            String command = "";
-            messageTV.setText(msg);
-            numberTV.setText(phoneNo);
-            command = phoneNo + "\n" + msg;
-            if (connectedThread != null){
-                connectedThread.write(command);
+            //load filtered number and compare it with resived number
+            SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+            if (sharedPreferences.getString(FILTERED_NUMBER, "").equals(phoneNo)){
+                Toast.makeText(context, "Message: " +msg +"\nNumber" +phoneNo, Toast.LENGTH_LONG).show();
+                String command = "";
+                messageTV.setText(msg);
+                numberTV.setText(phoneNo);
+                command = phoneNo + "\n" + msg;
+                if (connectedThread != null){
+                    connectedThread.write(command);
+                }
             }
-
         }
     };
     //ctrl + O -> onResume
@@ -94,7 +123,18 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     protected void onResume() {
         super.onResume();
         registerReceiver(receiver, new IntentFilter(SMS_RECEIVED));
+        registerReceiver(sentReceiver, new IntentFilter(SENT_SMS));
+        registerReceiver(deliverReceiver, new IntentFilter(DELIVER_SMS));
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        unregisterReceiver(sentReceiver);
+        unregisterReceiver(deliverReceiver);
+    }
+
     //ctrl + O -> onDestroy
     @Override
     protected void onDestroy() {
@@ -118,6 +158,17 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         messageTV = findViewById(R.id.message);
         numberTV = findViewById(R.id.number);
 
+        fnumberTV = findViewById(R.id.number1);
+        btnsavefilter = findViewById(R.id.btn_filter);
+        filteredNo = findViewById(R.id.FilteredPhoneNo);
+
+        answerTV = findViewById(R.id.tv_answer);
+
+        sent_pi = PendingIntent.getBroadcast(MainActivity.this, 0, sent_intent, 0);
+        deliver_pi = PendingIntent.getBroadcast(MainActivity.this, 0, deliver_intent, 0);
+
+        etConsole = findViewById(R.id.et_console);
+
         frameMessage = findViewById(R.id.frame_message);
         frameControls = findViewById(R.id.frame_control);
 
@@ -135,6 +186,13 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
         btnDisconnect.setOnClickListener(this);
 
+        btnsavefilter.setOnClickListener(this);
+
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setCancelable(false);
+        progressDialog.setTitle("Connecting...");
+        progressDialog.setMessage("Please wait. I will took a while.");
+
         bluetoothDevices = new ArrayList<>();
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -144,7 +202,9 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         filter.addAction(BluetoothDevice.ACTION_FOUND);
         registerReceiver(MinuReceiver, filter);
 
-
+        //load savedata and update fnumberTV
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        fnumberTV.setText(sharedPreferences.getString(FILTERED_NUMBER, ""));
 
         if(bluetoothAdapter == null){
             Toast.makeText(this, "BT is not supported!", Toast.LENGTH_LONG).show();
@@ -169,7 +229,47 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECEIVE_SMS}, MY_PERMISSIONS_REQUEST_RECEIVE_SMS);
             }
         }
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED){
+            //if the permission is not been granted then check if the user has denied the permission
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.SEND_SMS)){
+                //Do nothing as user has denied
+            }
+            else{
+                //a pop up will appear asking for required permission i.e. Allow or Deny
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.SEND_SMS}, MY_PERMISSIONS_REQUEST_SEND_SMS);
+            }
+        }
     }//onCreate
+
+
+
+    BroadcastReceiver sentReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (getResultCode()){
+                case Activity.RESULT_OK:
+                    Toast.makeText(context, "SMS send!", Toast.LENGTH_LONG).show();
+                    break;
+                default:
+                    Toast.makeText(context, "SMS Failure!", Toast.LENGTH_LONG).show();
+                    break;
+            }
+        }
+    };
+
+    BroadcastReceiver deliverReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (getResultCode()){
+                case Activity.RESULT_OK:
+                    Toast.makeText(context, "SMS Delivered!", Toast.LENGTH_LONG).show();
+                    break;
+                default:
+                    Toast.makeText(context, "SMS deliver Failure!", Toast.LENGTH_LONG).show();
+                    break;
+            }
+        }
+    };
 
     //ctrl+o ->  onClick, onItemClick, onCheckedChanged
     @Override
@@ -186,7 +286,31 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             }
             showFrameControls();
         }
+        else if(v.equals(btnsavefilter)){
+            //вывести текст
+            String text = filteredNo.getText().toString();
+            fnumberTV.setText(text);
+            // сохранить текст
+            saveData(text);
+        }
     }
+
+    public void saveData(String filteredNo){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putString(FILTERED_NUMBER, filteredNo);
+
+        editor.apply();
+        Toast.makeText(this, "Data saved", Toast.LENGTH_SHORT).show();
+    }
+
+    /* public void loadData(){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        String text;
+        text = sharedPreferences.getString(FILTERED_NUMBER, "");
+    }
+    */
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -265,6 +389,16 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                         }
                     }
                     //TODO - Add your code here to start Discovery
+                }
+                break;
+            case MY_PERMISSIONS_REQUEST_SEND_SMS:
+                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    //Now broadcastreceiver will work in background
+                    Toast.makeText(this, "Permission Allowed!", Toast.LENGTH_LONG).show();
+                }
+                else{
+                    Toast.makeText(this, "Permission Denied!", Toast.LENGTH_LONG).show();
+                    finish();
                 }
                 break;
         }
@@ -405,6 +539,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             try {
                 Method method = device.getClass().getMethod("createRfcommSocket", new Class[]{int.class});
                 bluetoothSocket = (BluetoothSocket) method.invoke(device, 1);
+
+                progressDialog.show();
             }
             catch (Exception e){
                 e.printStackTrace();
@@ -416,12 +552,15 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             try{
                 bluetoothSocket.connect();
                 success = true;
+
+                progressDialog.dismiss();
             }
             catch (IOException e){
                 e.printStackTrace();
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        progressDialog.dismiss();
                         Toast.makeText(MainActivity.this, "Cant connect", Toast.LENGTH_LONG).show();
                     }
                 });
@@ -457,6 +596,8 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         private final InputStream inputStream;
         private final OutputStream outputStream;
 
+        private boolean isConnected = false;
+
         public ConnectedThread(BluetoothSocket bluetoothSocket) {
             InputStream inputStream = null;
             OutputStream outputStream = null;
@@ -468,11 +609,48 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             }
             this.inputStream = inputStream;
             this.outputStream = outputStream;
+            isConnected = true;
         }
 
         @Override
         public void run() {
             //esli nado 4t0-to s4itatj
+            BufferedInputStream bis = new BufferedInputStream(inputStream);
+            StringBuffer buffer = new StringBuffer();
+            final StringBuffer sbConsole = new StringBuffer();
+            final ScrollingMovementMethod movementMethod = new ScrollingMovementMethod();
+
+            while (isConnected){
+                try {
+                    //вытащить отсюда текст, чтоб дальше с ним можно было работать
+                    int bytes = bis.read();
+                    buffer.append((char)bytes);
+                    int eof = buffer.indexOf("\r\n");
+                    if (eof > 0){
+                        sbConsole.append(buffer.toString());
+                        textFromArduino = buffer.toString(); // prinjatie dannie s peremennuju
+                        answerTV.setText(textFromArduino);
+                        connectedThread.sendSMS();
+                        buffer.delete(0, buffer.length());
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                etConsole.setText(sbConsole.toString());
+                                etConsole.setMovementMethod(movementMethod);
+                            }
+                        });
+                    }
+
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
+            }
+            try {
+                bis.close();
+            }catch (IOException e){
+                e.printStackTrace();
+            }
         }
 
         public void write(String string){
@@ -490,12 +668,25 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
 
         public void cancel(){
             try {
+                isConnected = false;
                 inputStream.close();
                 outputStream.close();
             }catch (IOException e){
                 e.printStackTrace();
             }
 
+        }
+
+        public void sendSMS(){
+            SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+            phoneNumber = sharedPreferences.getString(FILTERED_NUMBER, "");
+
+            try {
+                SmsManager smsManager = SmsManager.getDefault();
+                smsManager.sendTextMessage(phoneNumber, null, textFromArduino, sent_pi, deliver_pi);
+            }catch(Exception e){
+                e.printStackTrace();
+            }
         }
     }
 }

@@ -15,7 +15,8 @@ Sõnumeid, mis saadab teised seaded BT-moodulile arduino kirjutab serial monitor
 ## SMSApp  
 - VERSIOON_1 - loeb sisse tulevaid sms, fail asub kaustas "APK" nimega "app-debug_v1.apk"  
 - VERSIOON_2 - lülitab sisse/välja Bt, fail asub kaustas "APK" nimega "app-debug_v2.apk"  
-- VERSIOON_2 - teeb ühendust ja saadab info Bt kaudu, fail asub kaustas "APK" nimega "app-debug_v3.apk"  
+- VERSIOON_3 - teeb ühendust ja saadab info Bt kaudu, fail asub kaustas "APK" nimega "app-debug_v3.apk"  
+- VERSIOON_6 - filter, salvestab filter, sms vastus (tagasiside), arduino vastuse monitor, fail asub kaustas "APK" nimega "app-debug_v65.apk" 
    
 ## Lühikirjeldus  
 Kirjutada lihtne rakendus telefoni jaoks, mis saadab sissetulevad SMSid bluetoothi kaudu   
