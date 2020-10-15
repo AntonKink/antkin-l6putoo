@@ -4,6 +4,8 @@
 SoftwareSerial BT(10, 11); //Rx, Tx
 LiquidCrystal lcd(7, 6, 5, 4, 3, 2); //RS E D4 D5 D6 D7
 
+#define PIN_RELAY 9
+
 String text, SMSnumber, SMStext; 
 
 void setup()
@@ -11,6 +13,10 @@ void setup()
   //serial monitor and bt serial open
   Serial.begin(9600);
   BT.begin(9600);
+
+  //relee
+  pinMode(PIN_RELAY, OUTPUT);
+  digitalWrite(PIN_RELAY, LOW); //relee off
   
   //test msgs
   BT.println("bt module is ready");
@@ -46,6 +52,14 @@ void loop()
     }
     else if(SMStext.equals("ma")){
       BT.println("mama");
+    }
+    else if(SMStext.equals("relee_on")){
+      BT.println("relee on");
+      digitalWrite(PIN_RELAY, HIGH); //relee on
+    }
+    else if(SMStext.equals("relee_off")){
+      BT.println("relee off");
+      digitalWrite(PIN_RELAY, LOW); // relee off
     }
     else{
       BT.println("error operator");
