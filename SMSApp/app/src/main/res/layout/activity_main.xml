@@ -9,59 +9,57 @@
     tools:context=".MainActivity">
 
     <!-- alt+enter - store string as @string/ -->
-    <TextView
-        android:id="@+id/textView"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/Pealkiri"
-        android:gravity="center"
-        android:layout_marginTop="50dp"
-        android:textSize="24sp"
-        />
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="Receiving phone number:"
+            android:textSize="24sp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="phone number"
+                android:inputType="phone"
+                android:background="#1010"
+                android:layout_gravity="center"
+                android:layout_marginRight="25dp"
+                android:textSize="24sp"
+                android:id="@+id/FilteredPhoneNo"
+                />
+            <Button
+                android:id="@+id/btn_filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginLeft="38dp"
+                android:text="save number"
+                android:textSize="20sp" />
+        </LinearLayout>
+    </LinearLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="Message:"
+        android:textSize="24sp"/>
     <EditText
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="phone number"
-        android:inputType="phone"
-        android:layout_gravity="center"
-        android:layout_marginTop="25dp"
-        android:textSize="24sp"
-        android:id="@+id/FilteredPhoneNo"
-        />
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="save filter"
-        android:layout_gravity="center"
-        android:textSize="24sp"
-        android:id="@+id/btn_filter"/>
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="filtered number"
-        android:layout_gravity="center"
-        android:layout_marginTop="25dp"
-        android:textSize="24sp"
-        android:id="@+id/number1"
-    />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="@string/message"
-        android:layout_gravity="center"
-        android:layout_marginTop="25dp"
-        android:textSize="24sp"
-        android:id="@+id/message"
-        />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="@string/number"
-        android:layout_gravity="center"
-        android:layout_marginTop="25dp"
-        android:textSize="24sp"
-        android:id="@+id/number"
-        />
+        android:layout_below="@+id/btn_disconnect"
+        android:layout_marginTop="8dp"
+        android:lines="8"
+        android:background="#1010"
+        android:hint="\n--------------------\nDate: \nTime: \nMessage: "
+        android:scrollbars="vertical"
+        android:editable="false"
+        android:gravity="bottom"
+        android:id="@+id/et_console2"/>
     <Switch
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -129,27 +127,25 @@
             android:layout_marginTop="4dp"
             android:textSize="24sp"
             android:id="@+id/btn_disconnect"/>
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/btn_disconnect"
-            android:layout_marginTop="8dp"
-            android:lines="4"
-            android:scrollbars="vertical"
-            android:editable="false"
-            android:gravity="bottom"
-            android:id="@+id/et_console"/><!-- lines should be 6-->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/et_console"
-            android:hint="answer from arduino"
-            android:layout_marginTop="25dp"
+            android:hint="Answer from Arduino:"
             android:textSize="24sp"
-            android:id="@+id/tv_answer"
-            />
-
-
+            android:layout_below="@+id/btn_disconnect"
+            android:id="@+id/console_hint"/>
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/console_hint"
+            android:layout_marginTop="8dp"
+            android:lines="8"
+            android:background="#1010"
+            android:hint="\n--------------------\nDate: \nTime: \nAnswer: "
+            android:scrollbars="vertical"
+            android:editable="false"
+            android:gravity="bottom"
+            android:id="@+id/et_console"/>
     </RelativeLayout>
 
 </LinearLayout>

@@ -21,9 +21,11 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.nfc.Tag;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
 import android.telephony.SmsManager;
 import android.text.method.ScrollingMovementMethod;
@@ -43,13 +45,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.Method;
 import java.security.PrivateKey;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -59,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     private static final int MY_PERMISSIONS_REQUEST_RECEIVE_SMS = 0;
     public static final int REQUEST_CODE_LOC =1;
     private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 2;
+    private static final int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 3;
     private static final String SMS_RECEIVED = "android.provider.Telephony.SMS_RECEIVED";
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final int REQ_ENABLE_BT = 10;
@@ -76,12 +88,16 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
     Intent deliver_intent = new Intent(DELIVER_SMS);
     PendingIntent sent_pi, deliver_pi;
 
-    TextView messageTV, numberTV, fnumberTV, answerTV;
     private Button btnsavefilter;
     private EditText filteredNo;
 
-    private EditText etConsole;
+    private EditText etConsole, etConsole2;
     private ProgressDialog progressDialog;
+    final StringBuffer sbConsole2 = new StringBuffer();
+    final ScrollingMovementMethod movementMethod2 = new ScrollingMovementMethod();
+    String msgNo, msgSave;
+    String LOGFILE = "SMSApp_Log_File.txt";
+    String LOGFILEDIR = "SmsAppDir";
 
     private FrameLayout frameMessage;
     private LinearLayout frameControls;
@@ -109,15 +125,74 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             if (sharedPreferences.getString(FILTERED_NUMBER, "").equals(phoneNo)){
                 Toast.makeText(context, "Message: " +msg +"\nNumber" +phoneNo, Toast.LENGTH_LONG).show();
                 String command = "";
-                messageTV.setText(msg);
-                numberTV.setText(phoneNo);
+                Date currentDate = new Date();
+                DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+                String dateText = dateFormat.format(currentDate);
+                DateFormat timeFormat = new SimpleDateFormat("HH.mm.ss", Locale.getDefault());
+                String timeText = timeFormat.format(currentDate);
+                //received phone number - phoneNo
+                //received message - msg
+                msgNo = "\n--------------------\nDate: " +dateText +"\nTime: " +timeText+ "\nMessage: " +msg;
+                msgSave = "\n--------------------\nReceived SMS from " +phoneNo +"\nDate: " +dateText +"\nTime: " +timeText+ "\nMessage: " +msg;
+                sbConsole2.append(msgNo);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        etConsole2.setText(sbConsole2.toString());
+                        etConsole2.setMovementMethod(movementMethod2);
+                    }
+                });
+                //setText(msg);
+                //setText(phoneNo);
                 command = phoneNo + "\n" + msg;
                 if (connectedThread != null){
                     connectedThread.write(command);
                 }
+
+            }else{
+                Date currentDate = new Date();
+                DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+                String dateText = dateFormat.format(currentDate);
+                DateFormat timeFormat = new SimpleDateFormat("HH.mm.ss", Locale.getDefault());
+                String timeText = timeFormat.format(currentDate);
+                msgSave = "\n--------------------\nReceived SMS from " +phoneNo +"\nDate: " +dateText +"\nTime: " +timeText+ "\nMessage: " +msg;
             }
+            //anyway, save it to a file
+            //тут нужно сохранить файл
+            // write text to a file
+            writeFileSD(msgSave);
+
         }
     };
+
+    void writeFileSD(String msgS) {
+        // проверяем доступность SD
+        if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            Toast.makeText(this, "External Storages unvailable: " + Environment.getExternalStorageState(), Toast.LENGTH_SHORT).show();
+            return;
+        }else{
+            // получаем путь к SD
+            File sdPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+            // добавляем свой каталог к пути
+            sdPath = new File(sdPath.getAbsolutePath() + "/" + LOGFILEDIR);
+            // создаем каталог
+            if (!sdPath.exists()) { //Если папка не существует
+                sdPath.mkdirs();  //создаем её
+            }
+            // формируем объект File, который содержит путь к файлу
+            File sdFile = new File(sdPath, LOGFILE);
+            FileOutputStream fos;
+            try {
+                fos = new FileOutputStream(sdFile, true);
+                fos.write(msgS.getBytes());
+                fos.flush();
+                fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     //ctrl + O -> onResume
     @Override
     protected void onResume() {
@@ -155,19 +230,14 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        messageTV = findViewById(R.id.message);
-        numberTV = findViewById(R.id.number);
-
-        fnumberTV = findViewById(R.id.number1);
         btnsavefilter = findViewById(R.id.btn_filter);
         filteredNo = findViewById(R.id.FilteredPhoneNo);
-
-        answerTV = findViewById(R.id.tv_answer);
 
         sent_pi = PendingIntent.getBroadcast(MainActivity.this, 0, sent_intent, 0);
         deliver_pi = PendingIntent.getBroadcast(MainActivity.this, 0, deliver_intent, 0);
 
         etConsole = findViewById(R.id.et_console);
+        etConsole2 = findViewById(R.id.et_console2);
 
         frameMessage = findViewById(R.id.frame_message);
         frameControls = findViewById(R.id.frame_control);
@@ -202,9 +272,9 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         filter.addAction(BluetoothDevice.ACTION_FOUND);
         registerReceiver(MinuReceiver, filter);
 
-        //load savedata and update fnumberTV
+        //load savedata and update filteredNo
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
-        fnumberTV.setText(sharedPreferences.getString(FILTERED_NUMBER, ""));
+        filteredNo.setText(sharedPreferences.getString(FILTERED_NUMBER, ""));
 
         if(bluetoothAdapter == null){
             Toast.makeText(this, "BT is not supported!", Toast.LENGTH_LONG).show();
@@ -237,6 +307,16 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             else{
                 //a pop up will appear asking for required permission i.e. Allow or Deny
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.SEND_SMS}, MY_PERMISSIONS_REQUEST_SEND_SMS);
+            }
+        }
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            //if the permission is not been granted then check if the user has denied the permission
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)){
+                //Do nothing as user has denied
+            }
+            else{
+                //a pop up will appear asking for required permission i.e. Allow or Deny
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
             }
         }
     }//onCreate
@@ -289,7 +369,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
         else if(v.equals(btnsavefilter)){
             //вывести текст
             String text = filteredNo.getText().toString();
-            fnumberTV.setText(text);
+            filteredNo.setText(text);
             // сохранить текст
             saveData(text);
         }
@@ -392,6 +472,16 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                 }
                 break;
             case MY_PERMISSIONS_REQUEST_SEND_SMS:
+                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    //Now broadcastreceiver will work in background
+                    Toast.makeText(this, "Permission Allowed!", Toast.LENGTH_LONG).show();
+                }
+                else{
+                    Toast.makeText(this, "Permission Denied!", Toast.LENGTH_LONG).show();
+                    finish();
+                }
+                break;
+            case MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE:
                 if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                     //Now broadcastreceiver will work in background
                     Toast.makeText(this, "Permission Allowed!", Toast.LENGTH_LONG).show();
@@ -619,6 +709,7 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
             StringBuffer buffer = new StringBuffer();
             final StringBuffer sbConsole = new StringBuffer();
             final ScrollingMovementMethod movementMethod = new ScrollingMovementMethod();
+            String msgNo2;
 
             while (isConnected){
                 try {
@@ -627,12 +718,20 @@ public class MainActivity extends AppCompatActivity implements CompoundButton.On
                     buffer.append((char)bytes);
                     int eof = buffer.indexOf("\r\n");
                     if (eof > 0){
-                        sbConsole.append(buffer.toString());
+                        Date currentDate = new Date();
+                        DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+                        String dateText = dateFormat.format(currentDate);
+                        DateFormat timeFormat = new SimpleDateFormat("HH.mm.ss", Locale.getDefault());
+                        String timeText = timeFormat.format(currentDate);
+                        msgNo2 = "\n--------------------\nDate: " +dateText +"\nTime: " +timeText+ "\nAnswer: " +buffer.toString();
+                        msgSave = "\n--------------------\nAnswer from Arduino\nDate: " +dateText +"\nTime: " +timeText+ "\nAnswer: " +buffer.toString();
+                        //anyway, save it to a file
+                        //ТУТ нужно сохранить файл
+                        writeFileSD(msgSave);
+                        sbConsole.append(msgNo2);
                         textFromArduino = buffer.toString(); // prinjatie dannie s peremennuju
-                        answerTV.setText(textFromArduino);
                         connectedThread.sendSMS();
                         buffer.delete(0, buffer.length());
-
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {

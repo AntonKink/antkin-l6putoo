@@ -11,7 +11,7 @@ String text, SMSnumber, SMStext;
 void setup()
 {
   //serial monitor and bt serial open
-  Serial.begin(9600);
+  //Serial.begin(9600);
   BT.begin(9600);
 
   //relee
@@ -20,7 +20,7 @@ void setup()
   
   //test msgs
   BT.println("bt module is ready");
-  Serial.println("arduino monitor is ready");
+  //Serial.println("arduino monitor is ready");
   
   lcd.begin(16,2);
   
@@ -38,8 +38,8 @@ void loop()
     text = BT.readString();
     SMSnumber = text.substring(0, (text.indexOf('\n'))); 
     SMStext = text.substring((text.indexOf('\n')+1), text.length()); 
-    Serial.println("number: " + SMSnumber); 
-    Serial.println("text:   " + SMStext);
+    //Serial.println("number: " + SMSnumber); 
+    //Serial.println("text:   " + SMStext);
 
     lcd.clear();
     lcd.setCursor(0, 1);
